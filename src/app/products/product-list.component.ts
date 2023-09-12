@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { EMPTY, Subscription, catchError } from 'rxjs';
+import {EMPTY, catchError, of, combineLatest, interval, take} from 'rxjs';
 import { ProductCategory } from '../product-categories/product-category';
 
 import { ProductService } from './product.service';
@@ -22,7 +22,14 @@ export class ProductListComponent {
       }),
     );
 
-  constructor(private productService: ProductService) { }
+
+  // observable1$ = interval(1000).pipe(take(15));
+  // observable2$ = interval(1500).pipe(take(14));
+
+   // combined$ = combineLatest([this.observable1$, this.observable2$]);
+
+constructor(private productService: ProductService) {
+}
 
   onAdd(): void {
     console.log('Not yet implemented');
@@ -31,4 +38,13 @@ export class ProductListComponent {
   onSelected(categoryId: string): void {
     console.log('Not yet implemented');
   }
+
+
+  // test(){
+  //   this.combined$.subscribe(([val1, val2]) => {
+  //     console.log(`Wert von observable1$: ${val1}, Wert von observable2$: ${val2}`);
+  //   });
+  // }
+
+
 }
