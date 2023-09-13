@@ -13,7 +13,7 @@ export class ProductCategoryService {
 
   productCategories$ = this.http.get<ProductCategory[]>(this.productCategoriesUrl)
     .pipe(
-      tap(data => console.log('Categories', JSON.stringify(data))),
+      // tap(data => console.log('Categories', JSON.stringify(data))),
       catchError(this.handleError)
     );
 

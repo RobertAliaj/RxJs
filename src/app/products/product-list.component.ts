@@ -1,9 +1,23 @@
 import { Component } from '@angular/core';
 
-import {EMPTY, catchError, of, combineLatest, interval, take} from 'rxjs';
+import {
+  EMPTY,
+  catchError,
+  of,
+  combineLatest,
+  interval,
+  take,
+  filter,
+  map,
+  tap,
+  Subject,
+  startWith,
+  BehaviorSubject
+} from 'rxjs';
 import { ProductCategory } from '../product-categories/product-category';
 
 import { ProductService } from './product.service';
+import {ProductCategoryService} from "../product-categories/product-category.service";
 
 @Component({
   templateUrl: './product-list.component.html',
@@ -12,23 +26,41 @@ import { ProductService } from './product.service';
 export class ProductListComponent {
   pageTitle = 'Product List';
   errorMessage = '';
-  categories: ProductCategory[] = [];
 
-  products$ = this.productService.products$
+  private categorySelectedSubject = new BehaviorSubject<number>(0 );
+  categorySelectedActions$ = this.categorySelectedSubject.asObservable();
+
+  products$ = combineLatest([
+    this.productService.productsWithCategory$,
+    this.categorySelectedActions$
+      // .pipe(
+      //   startWith(0)
+      // )
+    ])
+    .pipe(
+      tap(product => console.log(product)),
+      map(([products, selectedCategoryId]) =>
+        products.filter(product =>
+        selectedCategoryId? product.categoryId === selectedCategoryId : true
+        )),
+      catchError(err => {
+        this.errorMessage = err;
+        return EMPTY;
+      })
+    )
+
+  categories$ = this.productCategoryService.productCategories$
     .pipe(
       catchError(err => {
         this.errorMessage = err;
         return EMPTY;
-      }),
+      })
     );
 
 
-  // observable1$ = interval(1000).pipe(take(15));
-  // observable2$ = interval(1500).pipe(take(14));
 
-   // combined$ = combineLatest([this.observable1$, this.observable2$]);
-
-constructor(private productService: ProductService) {
+constructor(private productService: ProductService,
+private productCategoryService: ProductCategoryService) {
 }
 
   onAdd(): void {
@@ -36,15 +68,6 @@ constructor(private productService: ProductService) {
   }
 
   onSelected(categoryId: string): void {
-    console.log('Not yet implemented');
-  }
-
-
-  // test(){
-  //   this.combined$.subscribe(([val1, val2]) => {
-  //     console.log(`Wert von observable1$: ${val1}, Wert von observable2$: ${val2}`);
-  //   });
-  // }
-
-
+  this.categorySelectedSubject.next(+categoryId);
+}
 }
