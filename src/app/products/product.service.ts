@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 
-import {catchError, combineLatest, map, Observable, tap, throwError} from 'rxjs';
+import {BehaviorSubject, catchError, combineLatest, map, Observable, tap, throwError} from 'rxjs';
 
 import {Product} from './product';
 import {ProductCategoryService} from "../product-categories/product-category.service";
@@ -26,28 +26,39 @@ export class ProductService {
     this.productCategoryService.productCategories$
   ]).pipe(
     map(([products, categories]) =>
-    products.map(product => ({
-      ...product,
-      price: product.price ? product.price * 1.5 : 0,
-      category: categories.find(c => product.categoryId === c.id)?.name,
-      searchKey: [product.productName]
-    } as Product)))
+      products.map(product => ({
+        ...product,
+        price: product.price ? product.price * 1.5 : 0,
+        category: categories.find(c => product.categoryId === c.id)?.name,
+        searchKey: [product.productName]
+      } as Product)))
   )
 
 
-  selectedProduct$ = this.productsWithCategory$
-    .pipe(
-      map(products =>
-      products.find(
-        product => product.id === 5
-      )),
-      tap(product => console.log(product))
-    )
+  private productSelectedSubject = new BehaviorSubject<number>(0);
+  productsSelectedActions$ = this.productSelectedSubject.asObservable();
 
+  selectedProduct$ = combineLatest([
+    this.productsWithCategory$,
+    this.productsSelectedActions$
+  ])
+    .pipe(
+      map(([products, selectedProductId]) =>
+        products.find(
+          product => product.id === selectedProductId
+        )),
+      tap(product => console.log('Selected Product', product))
+    )
 
   constructor(private http: HttpClient,
               private productCategoryService: ProductCategoryService) {
   }
+
+
+  selectedProductChanged(selectedProductId: number){
+    this.productSelectedSubject.next(+selectedProductId)
+  }
+
 
   private fakeProduct(): Product {
     return {
@@ -80,16 +91,3 @@ export class ProductService {
 
 
 }
-
-
-// products$ = this.http.get<Product[]>(this.productsUrl)
-//   .pipe(
-//     map(products =>
-//       products.map(product => ({
-//         ...product,
-//         price: product.price ? product.price * 1.5 : 0,
-//         searchKey: [product.productName]
-//       } as Product))),
-//     tap(data => console.log('Products: ', JSON.stringify(data))),
-//     catchError(this.handleError)
-//   );
