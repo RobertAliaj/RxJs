@@ -33,9 +33,6 @@ export class ProductListComponent {
   products$ = combineLatest([
     this.productService.productsWithAdd$,
     this.categorySelectedActions$
-    // .pipe(
-    //   startWith(0)
-    // )
   ])
     .pipe(
       tap(product => console.log(product)),

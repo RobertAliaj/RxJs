@@ -1,7 +1,19 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 
-import {BehaviorSubject, catchError, combineLatest, map, merge, Observable, scan, Subject, tap, throwError} from 'rxjs';
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatest,
+  map,
+  merge,
+  Observable,
+  scan,
+  shareReplay,
+  Subject,
+  tap,
+  throwError
+} from 'rxjs';
 
 import {Product} from './product';
 import {ProductCategoryService} from "../product-categories/product-category.service";
@@ -16,7 +28,7 @@ export class ProductService {
 
   products$ = this.http.get<Product[]>(this.productsUrl)
     .pipe(
-      // tap(data => console.log('Products: ', JSON.stringify(data))),
+      tap(data => console.log('Products: ', JSON.stringify(data))),
       catchError(this.handleError)
     );
 
@@ -31,7 +43,8 @@ export class ProductService {
         price: product.price ? product.price * 1.5 : 0,
         category: categories.find(c => product.categoryId === c.id)?.name,
         searchKey: [product.productName]
-      } as Product)))
+      } as Product))),
+    shareReplay(1)
   )
 
 
@@ -47,16 +60,17 @@ export class ProductService {
         products.find(
           product => product.id === selectedProductId
         )),
-      tap(product => console.log('Selected Product', product))
+      // tap(product => console.log('Selected Product', product)),
+      shareReplay(1)
     )
 
 
   private productInsertedSubject = new Subject<Product>()
-  productInsertedActions = this.productInsertedSubject.asObservable()
+  productInsertedActions$ = this.productInsertedSubject.asObservable()
 
   productsWithAdd$ = merge(
     this.productsWithCategory$,
-    this.productInsertedSubject
+    this.productInsertedActions$
   ).pipe(
     scan((acc, value) =>
         value instanceof Array ? [...value] : [...acc, value]
@@ -107,6 +121,4 @@ export class ProductService {
     console.error(err);
     return throwError(() => errorMessage);
   }
-
-
 }
