@@ -13,7 +13,7 @@ import {catchError, EMPTY} from "rxjs";
 export class ProductDetailComponent {
   pageTitle = 'Product Detail';
   errorMessage = '';
-  productSuppliers: Supplier[] | null = null;
+  // productSuppliers: Supplier[] | null = null;
 
   product$ = this.productService.selectedProduct$
     .pipe(
@@ -22,6 +22,13 @@ export class ProductDetailComponent {
         return EMPTY;
       })
     );
+
+  productSuppliers$ = this.productService.selectedProductSuppliers$
+    .pipe(
+      catchError(err => {
+        this.errorMessage = err;
+        return EMPTY;
+      }));
 
   constructor(private productService: ProductService) {
   }
