@@ -35,7 +35,7 @@ export class ProductListComponent {
     this.categorySelectedActions$
   ])
     .pipe(
-      tap(product => console.log(product)),
+      // tap(product => console.log(product)),
       map(([products, selectedCategoryId]) =>
         products.filter(product =>
           selectedCategoryId ? product.categoryId === selectedCategoryId : true

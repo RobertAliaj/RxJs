@@ -13,9 +13,9 @@ export class ProductCategoryService {
 
   productCategories$ = this.http.get<ProductCategory[]>(this.productCategoriesUrl)
     .pipe(
-      tap(data => console.log('Categories', JSON.stringify(data))),
+      // tap(data => console.log('Categories', JSON.stringify(data))),
       shareReplay(1),
-      tap( data => console.log('After the share Replay')),
+      // tap( data => console.log('After the share Replay')),
       catchError(this.handleError)
     );
 
