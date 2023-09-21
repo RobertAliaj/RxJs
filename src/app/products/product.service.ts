@@ -4,13 +4,13 @@ import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {
   BehaviorSubject,
   catchError,
-  combineLatest,
+  combineLatest, filter, forkJoin,
   map,
   merge,
-  Observable,
+  Observable, of,
   scan,
   shareReplay,
-  Subject,
+  Subject, switchMap,
   tap,
   throwError
 } from 'rxjs';
@@ -18,6 +18,7 @@ import {
 import {Product} from './product';
 import {ProductCategoryService} from "../product-categories/product-category.service";
 import {SupplierService} from "../suppliers/supplier.service";
+import {Supplier} from "../suppliers/supplier";
 
 @Injectable({
   providedIn: 'root'
@@ -66,13 +67,30 @@ export class ProductService {
     )
 
 
-  selectedProductSuppliers$ = combineLatest([
-    this.selectedProduct$,
-    this.supplierService.suppliers$
-  ]).pipe(
-    map(([selectedProduct, suppliers]) =>
-      suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id)))
-  )
+  // selectedProductSuppliers$ = combineLatest([
+  //   this.selectedProduct$,
+  //   this.supplierService.suppliers$
+  // ]).pipe(
+  //   map(([selectedProduct, suppliers]) =>
+  //     suppliers.filter(supplier => selectedProduct?.supplierIds?.includes(supplier.id)))
+  // )
+
+
+  selectedProductSuppliers$ = this.selectedProduct$
+    .pipe(
+      // wenn es ein Product gibt dann geh Weiter
+      filter(product => Boolean(product)),
+      switchMap(selectedProduct => {
+        if (selectedProduct?.supplierIds) {
+          return forkJoin(selectedProduct.supplierIds.map(supplierId =>
+            this.http.get<Supplier>(`${this.suppliersUrl}/${supplierId}`)))
+        } else {
+          return of([]);
+        }
+      }),
+      tap(suppliers => console.log('product suppliers', suppliers))
+    )
+
 
   private productInsertedSubject = new Subject<Product>()
   productInsertedActions$ = this.productInsertedSubject.asObservable()
